@@ -1,0 +1,2 @@
+rootProject.name='ImageModule'
+include ':app',':lib_imagego_core','lib_imagego_glide'
