@@ -34,7 +34,7 @@ public class ImageDownloadImpl implements IImageDownload {
             public void run() {
                 try{
                     synchronized(task) {
-                        if(task.size() >= 0) {
+                        while (task.size() >= 0) {
                             wait();
                         }
                         task.addAll(runnable);
