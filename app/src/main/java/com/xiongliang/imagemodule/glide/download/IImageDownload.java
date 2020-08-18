@@ -11,6 +11,17 @@ package com.xiongliang.imagemodule.glide.download;
  */
 public interface IImageDownload {
     /**
+     * 添加任务, 添加任务与执行任务 通过wait/notify 进行同步
+     * @param runnable
+     */
+    void addTask(Runnable runnable);
+
+    /**
+     * 执行任务
+     */
+    void executeTask() throws InterruptedException;
+
+    /**
      * 多线程下载图片, 分片下载
      * @param url
      */
