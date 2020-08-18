@@ -27,7 +27,7 @@ public interface IImageLoader {
     Bitmap loadImage();
 
     /**
-     * 对图片进行压缩
+     * 对图片进行压缩, 避免OOM
      * @return
      */
     Bitmap reSample();
