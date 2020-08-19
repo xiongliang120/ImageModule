@@ -44,7 +44,6 @@ public class ImageDownloadImpl implements IImageDownload {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-
             }
         });
     }
