@@ -25,6 +25,7 @@ public class ImageDownloadImpl implements IImageDownload {
 
     /**
      * 开启子线程去添加任务,防止堵塞主线程
+     *
      * @param runnable
      */
     @Override
@@ -32,15 +33,15 @@ public class ImageDownloadImpl implements IImageDownload {
         ThreadPoolManager.getIOExecutor().execute(new Runnable() {
             @Override
             public void run() {
-                try{
-                    synchronized(task) {
-                        while (task.size() >= 0) {
+                try {
+                    synchronized (task) {
+                        while (task.size() >= cpuCount) {
                             wait();
                         }
                         task.addAll(runnable);
                         notifyAll();
                     }
-                }catch (Exception e){
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 
@@ -49,28 +50,34 @@ public class ImageDownloadImpl implements IImageDownload {
     }
 
     /**
-     * executeTask 必须运行在子线程中 ,不断去执行task 集合中的任务
+     * executeTask 必须运行在子线程中 ,不断去执行task 集合中的任务,子线程任务循环遍历
+     *
      * @throws
      */
     @Override
-    public void executeTask()  {
-        try {
-            synchronized (task){
-                while (task.size() <= 0){
-                    wait();
+    public void executeTask() {
+        while (true){
+            try {
+                //控制循环频率
+                Thread.sleep(1000);
+
+                synchronized (task) {
+                    while (task.size() <= 0) {
+                        wait();
+                    }
+                    Runnable run = task.remove(0);
+                    //执行任务, 根据文件的range 字段,配置url,下载到指定的目录 ,然后将下载的数据有序的合并成一个文件
+                    notifyAll();
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-            Runnable run = task.remove(0);
-            //执行任务, 根据文件的range 字段,配置url,下载到指定的目录 ,然后将下载的数据有序的合并成一个文件
-            notifyAll();
-        }catch (Exception e) {
-          e.printStackTrace();
         }
     }
 
     @Override
     public void downloadMultiThread(String url) {
-        for(int i = 0; i < cpuCount; i++){
+        for (int i = 0; i < cpuCount; i++) {
             ThreadPoolManager.getIOExecutor().execute(new Runnable() {
                 @Override
                 public void run() {
