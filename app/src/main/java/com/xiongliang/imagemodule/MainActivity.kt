@@ -24,6 +24,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         initView()
         initData()
+
+        ImageManager.loadImage();
     }
 
 
