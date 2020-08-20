@@ -18,7 +18,7 @@ public class DownRunnable implements Runnable{
 
     @Override
     public void run() {
-         //OkHttp 去根据url,start,end 去下载文件, 然后通过RandomAccessFile.seekTo() 写入指定位置
+         //OkHttp 去根据url,start,end, addHeader("Range","bytes="+start+"-"+end) 下载文件, 然后通过RandomAccessFile.seekTo() 写入指定位置
     }
 
     /**
