@@ -65,7 +65,11 @@ public class ImageDownloadImpl implements IImageDownload {
                         wait();
                     }
                     Runnable run = task.remove(0);
-                    //执行任务, 根据文件的range 字段,配置url,下载到指定的目录 ,然后将下载的数据有序的合并成一个文件
+                    /****
+                     *  执行任务, 根据文件的range 字段,配置url,下载到指定的目录,然后通过RandomAccessFile.seekTo() 直接跳过到指定的位置(这里不需要做同步)
+                     *  如果同时更新UI 进度条, 则需要做同步处理
+                     */
+
                     notifyAll();
                 }
             } catch (Exception e) {
