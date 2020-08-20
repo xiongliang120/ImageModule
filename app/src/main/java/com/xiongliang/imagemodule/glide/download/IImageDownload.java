@@ -13,21 +13,17 @@ import java.util.List;
  */
 public interface IImageDownload {
     /**
-     * 添加任务, 添加任务与执行任务 通过wait/notify 进行同步
-     * @param runnable
+     * 获取url 文件的长度
+     * @param url
+     * @return
      */
-    void addTask(List<Runnable> runnable);
-
-    /**
-     * 执行任务
-     */
-    void executeTask() throws InterruptedException;
+    void getFileLength(String url);
 
     /**
      * 多线程下载图片, 分片下载
-     * @param url
+     * @param length , url
      */
-    void downloadMultiThread(String url);
+    void downloadMultiThread(int length,String url);
 
     /**
      * 单线程下载图片

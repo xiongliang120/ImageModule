@@ -1,102 +1,100 @@
 package com.xiongliang.imagemodule.glide.download;
-
-import com.xiongliang.imagemodule.glide.download.IImageDownload;
-
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 public class ImageDownloadImpl implements IImageDownload {
     /**
      * 任务集合
      */
-    private List<Runnable> task = new ArrayList<>();
-
-    /**
-     * 生产者线程
-     */
-    private Thread producerThread;
-
-    /**
-     * 消费者线程
-     */
-    private Thread consumerThread;
+    private List<DownRunnable> downRunnables = new ArrayList<>();
 
     private int cpuCount = 3;
 
+    private DownCallback downCallback;
+
     /**
-     * 开启子线程去添加任务,防止堵塞主线程
-     *
-     * @param runnable
+     * 回调子线程总数,原子操作(多并发下,一个操作不能被打断,要么全部执行完毕,要么不执行)
      */
-    @Override
-    public void addTask(final List<Runnable> runnable) {
-        ThreadPoolManager.getIOExecutor().execute(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    synchronized (task) {
-                        while (task.size() >= cpuCount) {
-                            wait();
-                        }
-                        task.addAll(runnable);
-                        notifyAll();
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+    private AtomicInteger callbackCount = new AtomicInteger(0);
+
+
+    public ImageDownloadImpl(DownCallback downCallback){
+        this.downCallback = downCallback;
     }
 
-    /**
-     * executeTask 必须运行在子线程中 ,不断去执行task 集合中的任务,子线程任务循环遍历
-     *
-     * @throws
-     */
+
     @Override
-    public void executeTask() {
-        while (true){
-            try {
-                //控制循环频率
-                Thread.sleep(1000);
+    public void getFileLength(String url) {
+        //网络请求获取length,
+    }
 
-                synchronized (task) {
-                    while (task.size() <= 0) {
-                        wait();
+
+    @Override
+    public void downloadMultiThread(int length,String url) {
+        for (int i = 0; i < cpuCount; i++) {
+            int start =0;
+            int end = 0;
+            DownRunnable downRunnable  = new DownRunnable(url, start, end, url, new DownCallback() {
+                @Override
+                public void progress(int progress) {
+                    synchronized(this){
+                        //合并进度数据, 更新UI进度,需要做同步处理
+                        int totalProgress = 0;
+                        downCallback.progress(totalProgress);
                     }
-                    Runnable run = task.remove(0);
-                    /****
-                     *  执行任务, 根据文件的range 字段,配置url,下载到指定的目录,然后通过RandomAccessFile.seekTo() 直接跳过到指定的位置(这里不需要做同步)
-                     *  如果同时更新UI 进度条, 则需要做同步处理
-                     */
-
-                    notifyAll();
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+
+                @Override
+                public void loadSuccess(File file) {
+                    //判断所有线程runnable 都执行成功,才更新提示文件下载成功提示
+                    callbackCount.getAndIncrement();
+
+                    if(callbackCount.get() == cpuCount){
+                        downCallback.loadSuccess(file);
+                    }
+                }
+
+                @Override
+                public void loadFailed() {
+                    //一旦一个线程失败,则停止所有线程任务
+                    stopTasks();
+                    downCallback.loadFailed();
+                }
+            });
+
+            ThreadPoolManager.getIOExecutor().execute(downRunnable);
+            downRunnables.add(downRunnable);
         }
     }
 
-    @Override
-    public void downloadMultiThread(String url) {
-        for (int i = 0; i < cpuCount; i++) {
-            ThreadPoolManager.getIOExecutor().execute(new Runnable() {
-                @Override
-                public void run() {
-                    executeTask();
-                }
-            });
+    public void stopTasks(){
+        for (int i = 0; i < downRunnables.size(); i++) {
+             downRunnables.get(i).stopRunnable();
         }
     }
 
     @Override
     public void downloadSingleThread(String url) {
-        ThreadPoolManager.getIOExecutor().execute(new Runnable() {
+        DownRunnable downRunnable = new DownRunnable(url,0,0,url,new DownCallback(){
             @Override
-            public void run() {
-                executeTask();
+            public void progress(int progress) {
+
+            }
+
+            @Override
+            public void loadSuccess(File file) {
+
+            }
+
+            @Override
+            public void loadFailed() {
+
             }
         });
+
+        ThreadPoolManager.getIOExecutor().execute(downRunnable);
     }
 }
