@@ -24,6 +24,7 @@ public class ImageLoaderImpl implements IImageLoader {
 
     @Override
     public Bitmap reSample() {
+        //尺寸压缩通过 inSampleSize, 质量压缩 Bitmap.compress()
         return null;
     }
 
