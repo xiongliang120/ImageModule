@@ -9,13 +9,13 @@ public interface IImageLoader {
     void downLoadImage();
 
     /***
-     * 从内存缓存中获取图片
+     * 从内存缓存中获取图片,缓存处理后的图片
      * @return
      */
     Bitmap loadFromMemoryCache();
 
     /***
-     * 从磁盘缓存中获取图片
+     * 从磁盘缓存中获取图片, 缓存原始图片
      * @return
      */
     Bitmap loadFromDiskCache();
